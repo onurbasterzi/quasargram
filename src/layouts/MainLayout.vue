@@ -1,24 +1,42 @@
 <template>
   <q-layout view="lHh Lpr lFf">
-    <q-header elevated>
-      <q-toolbar>
+    <q-header
+      class="bg-white text-grey-10"
+      bordered
+    >
+      <q-toolbar class="constrain">
+
         <q-btn
+          class="large-screen-only q-mr-sm"
+          to='/camera'
+          size="18px"
           flat
-          dense
+          icon="eva-camera-outline"
           round
-          icon="menu"
-          aria-label="Menu"
-          @click="leftDrawerOpen = !leftDrawerOpen"
+          dense
+        />
+        <q-separator
+          class="large-screen-only"
+          spaced
+          vertical
+        />
+        <q-toolbar-title class="text-grand-hotel text-weight-medium">
+          Instagram
+        </q-toolbar-title>
+        <q-btn
+          class="large-screen-only"
+          to='/'
+          size="18px"
+          flat
+          icon="eva-home-outline"
+          round
+          dense
         />
 
-        <q-toolbar-title>
-          Quasar App
-        </q-toolbar-title>
 
-        <div>Quasar v{{ $q.version }}</div>
       </q-toolbar>
     </q-header>
-    <q-footer class="bg-white" bordered>
+    <q-footer class="small-screen-only bg-white " bordered>
 
    <q-tabs
          class="text-grey-10"
@@ -27,24 +45,19 @@
        >
       <q-route-tab
         to='/'
-        icon="mail"
-        label="Home"
-        name="home"
+        icon="eva-home-outline"
       />
        <q-route-tab
           to='/camera'
-          icon="alarm"
-          label="Camera"
-          name="camera"
+          icon="eva-camera-outline"
         />
-
       </q-tabs>
 
     </q-footer>
 
 
 
-    <q-page-container>
+    <q-page-container class="bg-grey-1">
       <router-view />
     </q-page-container>
   </q-layout>
@@ -62,3 +75,16 @@ export default {
   }
 }
 </script>
+<style lang="sass">
+  .q-toolbar
+    @media (min-width: $breakpoint-sm-min)
+      height: 77px
+  .q-toolbar__title
+    font-size: 30px
+    @media (max-width: $breakpoint-xs-max)
+      text-align: center
+  .q-footer
+    .q-tab__icon
+      font-size: 30px
+
+</style>
