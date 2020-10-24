@@ -35,9 +35,22 @@
         <q-input v-model="post.caption" label="Caption" class="col col-sm-6" dense />
       </div>
       <div class="row justify-center q-ma-md">
-        <q-input v-model="post.location" label="Location" class="col col-sm-6" dense>
+        <q-input
+          class="col col-sm-6"
+          dense
+          label="Location"
+          v-model="post.location"
+          :loading="locationLoading"
+        >
           <template v-slot:append>
-            <q-btn round dense flat icon="eva-navigation-2-outline" />
+            <q-btn
+             v-if="!locationLoading &&locationSupported"
+              @click='getLocation'
+              dense
+              flat
+              icon="eva-navigation-2-outline"
+              round
+            />
           </template>
         </q-input>
       </div>
@@ -64,7 +77,19 @@ export default {
       },
       imageCaptured:false,
       imageUpload:[],
-      hasCameraSupport:true
+      hasCameraSupport:true,
+      locationLoading:false
+    }
+  },
+  computed:{
+    locationSupported(){
+      if ('geolocation' in navigator) {
+        return true
+      }
+      else {
+        return false
+      }
+
     }
   },
   methods:{
@@ -134,7 +159,43 @@ export default {
          type: mimeString
        });
        return blob;
-     }
+     },
+    getLocation(){
+      this.locationLoading=true
+      navigator.geolocation.getCurrentPosition(position=>{
+        this.getCityAndCountry(position)
+      },err=>{
+        this.locationError()
+      },{timeout:7000})
+    },
+    getCityAndCountry(position){
+      let apiUrl=`https://geocode.xyz/${position.coords.latitude},${position.coords.longitude}?json=1`
+      this.$axios.get(apiUrl).then(result=>{
+        console.log('result: ',result)
+        this.locationSuccess(result)
+      }).catch(err=>{
+        this.locationError()
+      })
+    },
+    locationSuccess(result){
+
+      this.post.location=result.data.city
+       if(result.data.region){
+        this.post.location+= `, ${result.data.region}`
+      }
+      if(result.data.state){
+        this.post.location+= `, ${result.data.state}`
+      }
+      this.locationLoading=false
+    },
+    locationError(){
+      this.$q.dialog({
+        title: 'Error',
+        message: 'Location not found'
+      })
+
+      this.locationLoading=false
+    }
   },
   mounted(){
     this.initCamera()
