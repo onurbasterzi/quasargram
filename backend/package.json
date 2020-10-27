@@ -5,13 +5,16 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon index.js",
-    "deploy": "heroku builds:create -a quasargram35-backend"
+    "deploy": "heroku builds:create -a  quasargram35-backend"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "busboy": "^0.3.1",
+    "core-js": "^2.6.4",
     "express": "^4.17.1",
     "firebase-admin": "^9.3.0",
-    "nodemon": "^2.0.6"
+    "nodemon": "^2.0.6",
+    "uuid-v4": "^0.1.0"
   }
 }

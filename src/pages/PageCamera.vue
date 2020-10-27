@@ -7,30 +7,32 @@
         autoplay
       />
       <canvas  v-show="imageCaptured" ref='canvas' class="full-width" height="240"/>
-
     </div>
-    <div class="text-center q-pa-md">
-      <q-btn
-        v-if="hasCameraSupport"
-        @click="captureImage"
-        color="grey-10"
-        icon="eva-camera"
-        size="lg"
-        round
-      />
+      <div class="text-center q-pa-md">
+        <div class="row">
+          <div :class="hasCameraSupport?'offset-4 col-4':'offset-3 col-6'">
+            <q-btn :disable='imageCaptured' v-if="hasCameraSupport" @click="captureImage" color="grey-10" icon="eva-camera"
+              size="lg" round />
+            <q-file v-else outlined v-model="imageUpload" @input="captureImageFallback" accept="image/*"
+              label="Chose an image">
+              <template v-slot:prepend>
+                <q-icon name="eva-attach-outline" />
+              </template>
+            </q-file>
 
-      <q-file
-        v-else
-        outlined
-        v-model="imageUpload"
-        @input="captureImageFallback"
-        accept="image/*"
-        label="Chose an image"
-      >
-        <template v-slot:prepend>
-          <q-icon name="eva-attach-outline" />
-        </template>
-      </q-file>
+          </div>
+          <div class="col-1"  v-if="hasCameraSupport">
+            <div class="text-center q-pa-md" >
+              <q-btn :disable='imageCaptured' v-if="hasCameraSupport" @click="changeCameraMode" color="grey-10" icon="eva-flip-outline"
+                size="md" round />
+            </div>
+          </div>
+        </div>
+
+
+
+
+
       <div class="row justify-center q-ma-md">
         <q-input v-model="post.caption" label="Caption" class="col col-sm-6" dense />
       </div>
@@ -55,14 +57,21 @@
         </q-input>
       </div>
       <div class="row justify-center q-mt-lg">
-        <q-btn unelevated rounded color="primary" label="POST IMAGE" />
+        <q-btn
+          @click='addPost()'
+          :disable='!post.caption || !post.photo'
+          color="primary"
+          label="POST IMAGE"
+          rounded
+          unelevated
+        />
       </div>
     </div>
   </q-page>
 </template>
 
 <script>
-import { uid } from 'quasar'
+import { format, uid } from 'quasar'
 require('md-gum-polyfill')
 export default {
   name: 'PageCamera',
@@ -78,7 +87,8 @@ export default {
       imageCaptured:false,
       imageUpload:[],
       hasCameraSupport:true,
-      locationLoading:false
+      locationLoading:false,
+      phoneCameraMode:'user'
     }
   },
   computed:{
@@ -90,12 +100,26 @@ export default {
         return false
       }
 
+    },
+    backgroundSyncSupported(){
+      if('serviceWorker' in navigator && 'SyncManager' in window)
+      return true
+      else
+      return false
     }
+
   },
   methods:{
+    changeCameraMode(){
+      this.phoneCameraMode=='user'?this.phoneCameraMode='environment':this.phoneCameraMode='user'
+      this.disableCamera()
+      this.initCamera()
+      console.log(this.phoneCameraMode)
+    },
     initCamera(){
      navigator.mediaDevices.getUserMedia({
-       video:true
+       video:{facingMode:this.phoneCameraMode},
+
      }).then(stream=>{
        this.$refs.video.srcObject=stream
      }).catch(error=>{
@@ -196,6 +220,53 @@ export default {
 
       this.locationLoading=false
     }
+    ,
+    addPost() {
+
+      this.$q.loading.show()
+
+
+
+      let formData = new FormData()
+      formData.append('id', this.post.id)
+      formData.append('caption', this.post.caption)
+      formData.append('location', this.post.location)
+      formData.append('date', this.post.date)
+      formData.append('file', this.post.photo, this.post.id + '.png')
+
+      this.$axios.post(`${process.env.API}/createPost`, formData).
+      then(response => {
+
+        this.$router.push('/')
+        this.$q.notify({
+          message: 'Fotoğraf eklendi !',
+          actions: [{
+            label: 'Tamam',
+            color: 'white'
+          }]
+        })
+        this.$q.loading.hide()
+
+      }).catch(err => {
+        console.log(backgroundSyncSupported )
+        if(!navigator.onLine && this.backgroundSyncSupported)
+        {
+            this.$q.notify('İşlem ofline olarak gerçekleştirildi...')
+            this.$router.push('/')
+
+        }
+        else{
+           this.$q.dialog({
+          title: 'Error',
+          message: 'Fotoğraf eklenirken bir hata oluştu'
+        })
+        this.$q.loading.hide()
+        }
+
+      })
+
+    }
+
   },
   mounted(){
     this.initCamera()
