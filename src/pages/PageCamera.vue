@@ -264,9 +264,7 @@ export default {
         }
 
       })
-
     }
-
   },
   mounted(){
     this.initCamera()
