@@ -72,6 +72,7 @@
 
 <script>
 import { format, uid } from 'quasar'
+import { openDB} from 'idb'
 require('md-gum-polyfill')
 export default {
   name: 'PageCamera',
@@ -102,9 +103,9 @@ export default {
 
     },
     backgroundSyncSupported(){
-      if('serviceWorker' in navigator && 'SyncManager' in window)
-      return true
-      else
+      if('serviceWorker' in navigator && 'SyncManager' in window){
+        return true
+      }
       return false
     }
 
@@ -225,8 +226,6 @@ export default {
 
       this.$q.loading.show()
 
-
-
       let formData = new FormData()
       formData.append('id', this.post.id)
       formData.append('caption', this.post.caption)
@@ -248,7 +247,7 @@ export default {
         this.$q.loading.hide()
 
       }).catch(err => {
-        console.log(backgroundSyncSupported )
+        this.$q.loading.hide()
         if(!navigator.onLine && this.backgroundSyncSupported)
         {
             this.$q.notify('İşlem ofline olarak gerçekleştirildi...')
@@ -260,7 +259,6 @@ export default {
           title: 'Error',
           message: 'Fotoğraf eklenirken bir hata oluştu'
         })
-        this.$q.loading.hide()
         }
 
       })

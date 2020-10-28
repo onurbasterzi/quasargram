@@ -6,12 +6,13 @@
   "author": "Ahmet Onur  Başterzi <ahmet@onurbasterzi.com>",
   "private": true,
   "scripts": {
-    "icons":"icongenie generate -i app-icon.png --skip-trim --theme-color 212121"
+    "icons": "icongenie generate -i app-icon.png --skip-trim --theme-color 212121"
   },
   "dependencies": {
     "@quasar/extras": "^1.0.0",
     "axios": "^0.18.1",
     "core-js": "^3.6.5",
+    "idb": "^5.0.7",
     "md-gum-polyfill": "^1.0.0",
     "quasar": "^1.0.0"
   },
