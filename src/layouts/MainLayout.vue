@@ -125,18 +125,20 @@ export default {
    let neverShowAppInstallBanner= this.$q.localStorage.getItem('neverShowAppInstallBanner')
 
     if(!neverShowAppInstallBanner){
-    window.addEventListener('beforeinstallprompt', (e) => {
-      // Prevent the mini-infobar from appearing on mobile
-      e.preventDefault();
-      // Stash the event so it can be triggered later.
-      deferredPrompt = e;
-      // Update UI notify the user they can install the PWA
-      setTimeout(()=>{
+       setTimeout(()=>{
         this.showAppInstallBanner=true
       },1000)
+    //    console.log('neverShowAppInstallBannerAAAAAAA',neverShowAppInstallBanner)
+    // window.addEventListener('beforeinstallprompt', (e) => {
+    //   // Prevent the mini-infobar from appearing on mobile
+    //   e.preventDefault();
+    //   // Stash the event so it can be triggered later.
+    //   deferredPrompt = e;
+    //   // Update UI notify the user they can install the PWA
 
-    });
+      // });
     }
+
   }
 }
 </script>

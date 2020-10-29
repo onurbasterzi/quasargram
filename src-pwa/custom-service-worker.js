@@ -91,11 +91,74 @@ registerRoute(
 if (backgroundSyncSupported) {
   self.addEventListener('fetch', (event) => {
     if (event.request.url.endsWith('/createPost')) {
-      const promiseChain = fetch(event.request.clone()).catch((err) => {
-        return createPostQueue.pushRequest({request: event.request });
-      });
-      event.waitUntil(promiseChain);
+      if(!self.navigator.onLine){
+        const promiseChain = fetch(event.request.clone()).catch((err) => {
+          return createPostQueue.pushRequest({request: event.request });
+        });
+        event.waitUntil(promiseChain);
+      }
     }
 
   });
 }
+
+
+/* events - push */
+
+self.addEventListener('push',event=>{
+    console.log('push message received:',event)
+    if(event.data){
+      let data=JSON.parse(event.data.text())
+      event.waitUntil(
+        self.registration.showNotification(
+          data.title,
+          {
+            body:data.body,
+            icon: 'icons/icon-128x128.png',
+            image: 'icons/icon-128x128.png',
+            data:{
+              openUrl:data.openUrl
+            }
+          }
+          )
+      )
+    }
+})
+
+
+/* events - notifications */
+
+self.addEventListener('notificationclick',event=>{
+  let notification=event.notification
+  let action=event.action
+
+  if(action=='hello'){
+    console.log('hello click')
+  }
+  else if(action=='bye'){
+    console.log('bye click')
+  }
+  else{
+   event.waitUntil(
+     clients.matchAll().then(clis=>{
+       console.log('clis: ',clis)
+       let clientUsingApp=clis.find(cli=>{
+         return cli.visibilityState === 'visible'
+       })
+       if(clientUsingApp){
+         clientUsingApp.navigate(notification.data.openUrl)
+         clientUsingApp.focus()
+       }
+       else{
+        clients.openWindow(notification.data.openUrl)
+
+       }
+     })
+   )
+  }
+  notification.close()
+})
+
+self.addEventListener('notificationclose',event=>{
+  console.log('notification closed',event)
+})

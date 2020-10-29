@@ -8,6 +8,7 @@ let path=require('path')
 let os=require('os')
 let fs=require('fs')
 let UUID=require('uuid-v4')
+let webpush =require('web-push')
 
 
 /* config */
@@ -23,6 +24,15 @@ admin.initializeApp({
 });
 const db = admin.firestore();
 let bucket = admin.storage().bucket();
+
+/* config webpush */
+webpush.setVapidDetails(
+  'mailto:test@test.com',
+  'BL7EryhTPwqt4YG0ib5whLHWANU0dGLxTwmbBGlTEJ1v9Q6g8i-RuCcuehJ0YOmViLOqKcAo_0A9glAYGbZ1440', // public key
+  'GSlg8ge5d6ML76h0_gn-TF8COS4d-WVgLCE9EOAXiGg' //private key
+);
+
+
 
 
 /* endpoint -posts */
@@ -92,7 +102,40 @@ app.post('/createPost', (request, response) => {
             photo:`https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${uploadedFile.name}?alt=media&token=${uuid}`
 
           }).then(()=>{
+            sendPushNotification()
+
             response.send('Post added: '+fields.id)
+          })
+        }
+        function sendPushNotification(){
+
+          let subscriptions = []
+          db.collection('subscriptions').get().then(snapshot=>{
+            snapshot.forEach((doc) => {
+              //console.log(doc.id, '=>', doc.data());
+              subscriptions.push(doc.data())
+            });
+
+            return subscriptions
+          }).then(subscriptions=>{
+
+            subscriptions.forEach(subscription=>{
+              const pushSubscription = {
+                endpoint: subscription.endpoint,
+                keys: {
+                  auth: subscription.keys.auth,
+                  p256dh: subscription.keys.p256dh
+                }
+              };
+              let pushContent={
+                title:'Yeni bir fotoğraf eklendi!!',
+                body:'Yeni fotoğrafı görmek için tıklayın..',
+                openUrl:'/#/'
+              }
+              let pushContentStringified=JSON.stringify(pushContent)
+
+              webpush.sendNotification(pushSubscription, pushContentStringified);
+            })
           })
         }
     });
@@ -100,6 +143,21 @@ app.post('/createPost', (request, response) => {
 
 
 })
+
+
+/* endpoint -cereateSubscription */
+
+app.post('/createSubscription', (request, response) => {
+  response.set('Access-Control-Allow-Origin','*')
+  db.collection('subscriptions').add(request.query).then(docRef=>{
+    response.send({
+      message:'Subscription added!',
+      postData:request.query
+    })
+  })
+})
+
+
 
 /* listen */
 app.listen(process.env.PORT || 3000)
