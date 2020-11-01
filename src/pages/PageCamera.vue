@@ -214,54 +214,74 @@ export default {
       this.locationLoading=false
     },
     locationError(){
+      let locationErrorMessage='Konum bulunamadı.'
+      if(this.$q.platform.is.mac){
+        locationErrorMessage+=' Mac kullanıcıysanız sistem ayarlarından tarayıcınız için Konum Servislerini  aktif hale getirmelisiniz'
+      }
+
       this.$q.dialog({
         title: 'Error',
-        message: 'Location not found'
+        message: locationErrorMessage
       })
 
       this.locationLoading=false
     }
     ,
     addPost() {
-
       this.$q.loading.show()
+      let postCreated = this.$q.localStorage.getItem('postCreated')
 
-      let formData = new FormData()
-      formData.append('id', this.post.id)
-      formData.append('caption', this.post.caption)
-      formData.append('location', this.post.location)
-      formData.append('date', this.post.date)
-      formData.append('file', this.post.photo, this.post.id + '.png')
-
-      this.$axios.post(`${process.env.API}/createPost`, formData).
-      then(response => {
-
-        this.$router.push('/')
-        this.$q.notify({
-          message: 'Fotoğraf eklendi !',
-          actions: [{
-            label: 'Tamam',
-            color: 'white'
-          }]
-        })
+      if (this.$q.platform.is.android && !postCreated && !navigator.onLine) {
+        this.addPostError()
         this.$q.loading.hide()
+      }
+      else {
 
-      }).catch(err => {
-        this.$q.loading.hide()
-        if(!navigator.onLine && this.backgroundSyncSupported)
-        {
+
+        let formData = new FormData()
+        formData.append('id', this.post.id)
+        formData.append('caption', this.post.caption)
+        formData.append('location', this.post.location)
+        formData.append('date', this.post.date)
+        formData.append('file', this.post.photo, this.post.id + '.png')
+
+        this.$axios.post(`${process.env.API}/createPost`, formData).
+        then(response => {
+          this.$q.localStorage.set('postCreated', true)
+          this.$router.push('/')
+          this.$q.notify({
+            message: 'Fotoğraf eklendi !',
+            actions: [{
+              label: 'Tamam',
+              color: 'white'
+            }]
+          })
+          this.$q.loading.hide()
+          if (this.$q.platform.is.safari) {
+            setTimeout(() => {
+              window.location.href('/')
+            }, 1000)
+          }
+
+        }).catch(err => {
+          this.$q.loading.hide()
+          if (!navigator.onLine && this.backgroundSyncSupported && postCreated) {
             this.$q.notify('İşlem ofline olarak gerçekleştirildi...')
             this.$router.push('/')
 
-        }
-        else{
-           this.$q.dialog({
+          } else {
+            this.addPostError()
+          }
+
+        })
+      }
+
+    },
+    addPostError(){
+         this.$q.dialog({
           title: 'Error',
           message: 'Fotoğraf eklenirken bir hata oluştu'
         })
-        }
-
-      })
     }
   },
   mounted(){

@@ -60,6 +60,7 @@ app.post('/createPost', (request, response) => {
 
     let fields={}
     let fileData={}
+    let photo
 
   var busboy = new Busboy({ headers: request.headers });
     busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
@@ -94,12 +95,13 @@ app.post('/createPost', (request, response) => {
 
       )
         function createDocument(uploadedFile){
+          photo=`https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${uploadedFile.name}?alt=media&token=${uuid}`
           db.collection('posts').doc(fields.id).set({
             id:fields.id,
             caption:fields.caption,
             location:fields.location,
             date:parseInt(fields.date),
-            photo:`https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${uploadedFile.name}?alt=media&token=${uuid}`
+            photo:photo
 
           }).then(()=>{
             sendPushNotification()
@@ -130,7 +132,8 @@ app.post('/createPost', (request, response) => {
               let pushContent={
                 title:'Yeni bir fotoğraf eklendi!!',
                 body:'Yeni fotoğrafı görmek için tıklayın..',
-                openUrl:'/#/'
+                openUrl:'/#/',
+                photo:photo
               }
               let pushContentStringified=JSON.stringify(pushContent)
 

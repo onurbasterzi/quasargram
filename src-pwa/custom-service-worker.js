@@ -115,7 +115,8 @@ self.addEventListener('push',event=>{
           {
             body:data.body,
             icon: 'icons/icon-128x128.png',
-            image: 'icons/icon-128x128.png',
+            badge: 'icons/icon-128x128.png',
+            image:data.photo,
             data:{
               openUrl:data.openUrl
             }
